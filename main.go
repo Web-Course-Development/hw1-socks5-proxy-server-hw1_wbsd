@@ -335,76 +335,7 @@ func handleConnect(conn net.Conn) (net.Conn, error) {
 
 		return targetConn, nil
 	}
-	if atyp == 0x03 {
 
-		length := make([]byte, 1)
-
-		_, err = io.ReadFull(conn, length)
-		if err != nil {
-			return nil, err
-		}
-
-		domainBytes := make([]byte, length[0])
-
-		_, err = io.ReadFull(conn, domainBytes)
-		if err != nil {
-			return nil, err
-		}
-
-		domain := string(domainBytes)
-
-		portBytes := make([]byte, 2)
-
-		_, err = io.ReadFull(conn, portBytes)
-		if err != nil {
-			return nil, err
-		}
-
-		port := int(portBytes[0])<<8 | int(portBytes[1])
-
-		log.Println("destination domain:", domain)
-		log.Println("destination port:", port)
-
-		targetConn, err := net.Dial(
-			"tcp",
-			fmt.Sprintf("%s:%d", domain, port),
-		)
-
-		if err != nil {
-
-			reply := []byte{
-				0x05,
-				0x01,
-				0x00,
-				0x01,
-				0, 0, 0, 0,
-				0, 0,
-			}
-
-			conn.Write(reply)
-
-			return nil, err
-		}
-
-		reply := []byte{
-			0x05,
-			0x00,
-			0x00,
-			0x01,
-			0, 0, 0, 0,
-			0, 0,
-		}
-
-		_, err = conn.Write(reply)
-		if err != nil {
-			targetConn.Close()
-			return nil, err
-		}
-
-		log.Println("connected to target domain")
-
-		return targetConn, nil
-	}
 	return nil, fmt.Errorf("unsupported address type")
 }
 func relay(client net.Conn, target net.Conn) {
